@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>면접 대박! 1:1 교사-학생 면접 코칭 시스템</title>
+    <title>면접 대박! JMT와 함께하는 면접 특강</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -130,6 +130,11 @@
             "13. 타인을 배려하거나 나눔을 실천했던 인상 깊은 경험은 무엇인가요?",
             "14. 고등학교 재학 중 가장 기억에 남는 도서(또는 영화)와 느낀 점은?",
             "15. 가장 좋아하는 과목과 싫어하는 과목 및 그 이유는 무엇인가요?"
+            "16. 싫어하는 사람과 같은 팀이 되어 프로젝트를 해야 한다면 어떻게 행동하겠습니까?"
+            "17. 평소에 문제점이 발생했을 때 누구와 의논하나요?"
+            "18. 팀 작업을 할 때 내가 생각하는 방향과 다른 방향으로 결정된다면 어떻게 하겠습니까?"
+            "19. 전체의 조화와 개인의 성취 중 중요하다고 생각하는 것은 무엇인가요?"
+            "20. 마지막으로 하고 싶은 말이 있다면?"
         ];
 
         function App() {
@@ -210,7 +215,7 @@
                     setCurrentAuth({ role: 'teacher' });
                     setTeacherPass('');
                 } else {
-                    setLoginError('교사 비밀번호가 일치하지 않습니다. (기본값: teacher1234)');
+                    setLoginError('교사 비밀번호가 일치하지 않습니다.');
                 }
             };
 
@@ -332,7 +337,7 @@
                                                     required
                                                     value={teacherPass}
                                                     onChange={(e) => setTeacherPass(e.target.value)}
-                                                    placeholder="교사 전용 암호 입력 (초기: teacher1234)"
+                                                    placeholder="교사 전용 암호 입력"
                                                     class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                                                 />
                                             </div>
@@ -1241,7 +1246,7 @@
 
                     {/* Footer */}
                     <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
-                        면접 방과후 코칭 시스템 • 최종합격을 응원합니다!
+                        면접으로 대학가자! 지민샘이 여러분들의 최종합격을 응원합니다!
                     </footer>
                 </div>
             );
