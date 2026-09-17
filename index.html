@@ -210,7 +210,7 @@
             const handleTeacherLogin = (e) => {
                 e.preventDefault();
                 setLoginError('');
-                // Default teacher password: teacher1234
+                // Default teacher password: 비공개
                 if (teacherPass === 'teacher1234' || teacherPass === '1234') {
                     setCurrentAuth({ role: 'teacher' });
                     setTeacherPass('');
