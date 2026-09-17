@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>면접 대박! 1:1 교사-학생 면접 코칭 시스템</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Google Fonts Inter & Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Initial Default Mock Data based on the provided PDF materials
+        const DEFAULT_STUDENTS = [
+            {
+                id: "std_30101",
+                studentId: "30101",
+                name: "학생",
+                password: "1234", // Default initial password
+                universities: [
+                    {
+                        id: "univ_1",
+                        univName: "아주대학교",
+                        deptName: "영어영문학과",
+                        appType: "학생부종합(ACE전형)",
+                        examDate: "2026.11.21(토) 14:00 / 인문관 301호",
+                        examMethod: "1단계: 서류 100% (3배수) / 2단계: 1단계 70% + 면접 30%",
+                        weightRatio: "서류평가 70% + 면접 30%",
+                        talentModel: "글로벌 의사소통 능력을 갖추고 인문학적 리더십을 갖춘 융합형 인재",
+                        evalFactors: "전공적합성(40%), 발전가능성(30%), 인성 및 공동체역량(30%)",
+                        notes: "블라인드 면접(교복 착용 금지, 이름/출신고교 언급 엄금). 면접관 2~3명, 개별 10~15분 진행."
+                    }
+                ],
+                answers: [
+                    {
+                        id: "ans_1",
+                        univId: "univ_1",
+                        category: "공통",
+                        question: "우리 학교와 학과에 지원하게 된 동기를 말해보세요.",
+                        keywords: "세계와 학생을 잇는 다리, 프렌즈, 욕망이라는 이름의 전차, 교직이수",
+                        answer: "저는 유창한 의사소통능력과 영어영문학 분야에 대한 깊은 이해를 바탕으로 학생과 세계를 이어주는 다리 같은 영어교사가 되기 위해 아주대학교 영어영문학과에 지원했습니다.\n\n고등학교 시절 드라마 '프렌즈'를 통해 영어권 문화와 의사소통능력을 향상시켰고, '욕망이라는 이름의 전차'를 읽으며 영문학 분야의 정서적 깊이에 매료되었습니다. 아주대학교 영어영문학과에는 '현대영미드라마의 이해' 과정 및 교직과정이 개설되어 있어, 제 꿈을 구체화하기에 최선의 선택이라고 확신합니다.",
+                        feedback: "두괄식 구성과 본인의 경험(과거-현재-미래)이 논리적으로 잘 연결되었습니다! 아주대학교의 특화 과목명을 언급한 점이 감점 없는 강점입니다.",
+                        updatedAt: "2026-09-16"
+                    },
+                    {
+                        id: "ans_2",
+                        univId: "univ_1",
+                        category: "생기부-동아리",
+                        question: "영미문학 탐구동아리에서 진행한 프로젝트 중 가장 기억에 남는 활동과 본인의 역할은 무엇인가요?",
+                        keywords: "영미 고전 리메이크 연극 극본 작성, 갈등 조정, 문화적 맥락 재해석",
+                        answer: "동아리에서 '시련(The Crucible)'을 현대 한국의 사이버 렉카 및 마녀사냥 현상과 비교 탐구하여 단편 극본을 제작한 활동이 가장 기억에 남습니다.\n\n저는 기획 총괄 및 극본 수정을 담당했습니다. 부원 간 주제 해석 방식의 차이로 갈등이 생겼을 때, 각자의 아이디어를 옴니버스 형식으로 결합하는 대안을 제시하여 성공적으로 발표회를 마쳤습니다.",
+                        feedback: "",
+                        updatedAt: "2026-09-17"
+                    }
+                ]
+            },
+            {
+                id: "std_30102",
+                studentId: "30102",
+                name: "이합격",
+                password: "5678",
+                universities: [],
+                answers: []
+            }
+        ];
+
+        const OT_GUIDE_CONTENT = {
+            goals: [
+                "1. 최종합격!",
+                "2. 면접에 대한 '근거있는' 자신감 얻기",
+                "3. 명료하고 논리적인 말하기 스킬 UP",
+                "4. 생기부 10000% 숙지",
+                "5. 나만의 가치관, 철학 형성"
+            ],
+            fiveRules: [
+                { title: "하나, '학교/학과 덕질하기'", desc: "지원학교의 교육목표, 인재상, 학과 인재상, 교수 연구동향, 교육과정 및 시사이슈 조사하기." },
+                { title: "둘, '나만의 특별함 찾기'", desc: "면접관에게 내가 선택받아야만 하는 이유 어필하기. 나의 3개년 학교생활(생기부) 철저히 분석!" },
+                { title: "셋, '전공관련 시사상식 공부하기'", desc: "단순 활동 나열을 넘어 관련 사회적 이슈와 연결하여 답변하고 꼬리질문에 대비하기." },
+                { title: "넷, '생활기록부 분석하기'", desc: "최소 20회 이상 정독. 형광펜 전략(학업-노랑/진로-파랑/공동체-초록/약점-주황) 및 활동별 스토리보드(동기-원인-과정-결과-배운점) 제작!" },
+                { title: "다섯, '스피치 연습'", desc: "한 문제당 30~40초 동안 간결, 명료, 논리적인 답안 구성 연습. 메리비언의 법칙(비언어적 요소 93%) 유념." }
+            ],
+            techTips: [
+                { title: "두괄식 말하기", text: "1. 생각 제시(저는 ~라 생각합니다) -> 2. 타당한 근거/사례(왜냐하면~) -> 3. 한계 인정(물론~) -> 4. 반론 및 해결안(그러나~)" },
+                { title: "시간 순 답변 스킬", text: "1. 메인 아이디어(결론) -> 2. 과거(동기 및 경험) -> 3. 현재(주요 노력을 통한 공부) -> 4. 미래(포부 및 학업계획)" },
+                { title: "답변이 막힐 때 마법의 문장", text: "답변이 짧거나 막힐 때 '앞으로 대학에 입학해서도 ~하여 성장하겠습니다'로 자연스럽게 확장" }
+            ],
+            attitudeTips: [
+                "입실 시 가볍게 목례 후 의자 앞에서 '안녕하십니까! 지원번호 O번입니다' 인사",
+                "면접관이 '앉으세요'라고 하면 감사 표시 후 엉덩이를 의자 뒤까지 붙여 허리 펴고 앉기",
+                "손은 오른손으로 왼손 엄지를 살짝 잡거나 가볍게 계란을 쥔 채 무릎 위에 올려놓기",
+                "시선은 면접관들의 눈을 고루 바라보고, 부담스러울 경우 인중이나 미간을 주시",
+                "마지막 한마디: 묻지 않더라도 손을 들고 '마지막으로 꼭 말씀드리고 싶은 소명이 있습니다' 어필",
+                "퇴실 시 '감사합니다' 인삿말 후 문 앞까지 차분하게 걸어가서 돌아보고 목례 후 문 살며시 닫기"
+            ],
+            blindRules: [
+                "금지어: 본인 성명, 수험번호, 출신 고교명, 부모 직업, 교외 수상/어학성적",
+                "면접 복장: 교복 착용 금지(대학별 지침 참조), 최대한 깔끔하고 단정한 사복/학생복 스타일"
+            ]
+        };
+
+        const COMMON_QUESTIONS = [
+            "1. 면접장에 오는 데 멀지는 않았나요? 오래 기다리셨나요?",
+            "2. 우리 학교와 지원 학과에 지원하게 된 동기가 무엇인가요?",
+            "3. 본인은 대학의 인재상과 교육목표에 부합하는 학생인가요?",
+            "4. 지원 학과에 오기 위해 고등학교 재학 중 노력했던 경험을 말해보세요.",
+            "5. 진로를 위해 롤모델로 삼고 있는 인물이 있다면 누구인가요?",
+            "6. 본인의 좌우명이나 삶의 가치관을 소개해보세요.",
+            "7. 본인 성격의 장점과 단점을 전공 및 단점 극복 노력과 연관 지어 말해보세요.",
+            "8. 학창 시절 가장 보람 있었던 일과 후회되는 일이 있다면 무엇인가요?",
+            "9. 대학 입학 후 학업 계획 및 장래 포부에 대해 말해보세요.",
+            "10. 마지막으로 면접관에게 꼭 하고 싶은 말이 있다면 해보세요.",
+            "11. 학교생활 중 다른 사람과 갈등을 경험했던 일과 이를 극복한 사례는?",
+            "12. 목표를 설정하여 한계에 도전해 본 경험이 있나요?",
+            "13. 타인을 배려하거나 나눔을 실천했던 인상 깊은 경험은 무엇인가요?",
+            "14. 고등학교 재학 중 가장 기억에 남는 도서(또는 영화)와 느낀 점은?",
+            "15. 가장 좋아하는 과목과 싫어하는 과목 및 그 이유는 무엇인가요?"
+        ];
+
+        function App() {
+            // Local state management
+            const [students, setStudents] = React.useState(() => {
+                const saved = localStorage.getItem('interview_app_students');
+                return saved ? JSON.parse(saved) : DEFAULT_STUDENTS;
+            });
+            
+            const [currentAuth, setCurrentAuth] = React.useState(() => {
+                const savedAuth = localStorage.getItem('interview_app_auth');
+                return savedAuth ? JSON.parse(savedAuth) : null; 
+            });
+
+            // Login Modal Forms
+            const [loginRole, setLoginRole] = React.useState('student'); // 'student' or 'teacher'
+            const [inputStdId, setInputStdId] = React.useState('');
+            const [inputStdName, setInputStdName] = React.useState('');
+            const [inputPassword, setInputPassword] = React.useState('');
+            const [teacherPass, setTeacherPass] = React.useState('');
+            const [loginError, setLoginError] = React.useState('');
+
+            // Active Student Dashboard State
+            const [activeTab, setActiveTab] = React.useState('univs');
+            const [selectedUnivId, setSelectedUnivId] = React.useState('all');
+
+            // Teacher View State
+            const [selectedStudentId, setSelectedStudentId] = React.useState(students[0]?.id || '');
+            const [teacherTab, setTeacherTab] = React.useState('answers'); // 'answers', 'univs', 'pwd_manage'
+            const [newPasswordInput, setNewPasswordInput] = React.useState('');
+            const [feedbackNotice, setFeedbackNotice] = React.useState('');
+
+            // Save to LocalStorage on change
+            React.useEffect(() => {
+                localStorage.setItem('interview_app_students', JSON.stringify(students));
+            }, [students]);
+
+            React.useEffect(() => {
+                if (currentAuth) {
+                    localStorage.setItem('interview_app_auth', JSON.stringify(currentAuth));
+                } else {
+                    localStorage.removeItem('interview_app_auth');
+                }
+            }, [currentAuth]);
+
+            // Handlers for Login
+            const handleStudentLogin = (e) => {
+                e.preventDefault();
+                setLoginError('');
+                const found = students.find(s => s.studentId === inputStdId.trim());
+                if (!found) {
+                    setLoginError('등록되지 않은 학번입니다. 교사에게 문의하세요.');
+                    return;
+                }
+                if (found.password !== inputPassword) {
+                    setLoginError('비밀번호가 올바르지 않습니다.');
+                    return;
+                }
+
+                // Update student's name from login input
+                const updatedName = inputStdName.trim() || found.name || '학생';
+                const updatedStudents = students.map(s => 
+                    s.id === found.id ? { ...s, name: updatedName } : s
+                );
+                setStudents(updatedStudents);
+
+                setCurrentAuth({ role: 'student', studentId: found.studentId, id: found.id });
+                setInputStdId('');
+                setInputStdName('');
+                setInputPassword('');
+            };
+
+            const handleTeacherLogin = (e) => {
+                e.preventDefault();
+                setLoginError('');
+                // Default teacher password: teacher1234
+                if (teacherPass === 'teacher1234' || teacherPass === '1234') {
+                    setCurrentAuth({ role: 'teacher' });
+                    setTeacherPass('');
+                } else {
+                    setLoginError('교사 비밀번호가 일치하지 않습니다. (기본값: teacher1234)');
+                }
+            };
+
+            const handleLogout = () => {
+                setCurrentAuth(null);
+                setLoginError('');
+            };
+
+            // Helpers for current student data
+            const currentStudent = students.find(s => s.studentId === currentAuth?.studentId) || students[0];
+
+            // Update student state helper
+            const updateStudentData = (updatedStudent) => {
+                setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+            };
+
+            if (!currentAuth) {
+                return (
+                    <div class="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+                        <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
+                            {/* Header Banner */}
+                            <div class="bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white text-center relative">
+                                <div class="inline-block p-3 bg-white/10 rounded-full mb-3 backdrop-blur-sm">
+                                    <i class="fa-solid fa-graduation-cap text-3xl"></i>
+                                </div>
+                                <h1 class="text-2xl font-bold tracking-tight">면접 방과후 멀티 플랫폼</h1>
+                                <p class="text-indigo-100 text-xs mt-1">대입 합격을 위한 1:1 학생-교사 면접 피드백 시스템</p>
+                            </div>
+
+                            {/* Mode Selection Tabs */}
+                            <div class="flex border-b border-slate-200 bg-slate-50">
+                                <button 
+                                    onClick={() => { setLoginRole('student'); setLoginError(''); }}
+                                    class={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${loginRole === 'student' ? 'bg-white text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-800'}`}
+                                >
+                                    <i class="fa-solid fa-user-graduate"></i> 학생 로그인
+                                </button>
+                                <button 
+                                    onClick={() => { setLoginRole('teacher'); setLoginError(''); }}
+                                    class={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${loginRole === 'teacher' ? 'bg-white text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-800'}`}
+                                >
+                                    <i class="fa-solid fa-chalkboard-user"></i> 교사 로그인
+                                </button>
+                            </div>
+
+                            {/* Login Form Body */}
+                            <div class="p-6">
+                                {loginError && (
+                                    <div class="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
+                                        <i class="fa-solid fa-circle-exclamation text-base shrink-0"></i>
+                                        <span>{loginError}</span>
+                                    </div>
+                                )}
+
+                                {loginRole === 'student' ? (
+                                    <form onSubmit={handleStudentLogin} class="space-y-4">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1">학번 (5자리예시: 30101)</label>
+                                            <div class="relative">
+                                                <i class="fa-solid fa-id-card absolute left-3 top-3 text-slate-400 text-sm"></i>
+                                                <input 
+                                                    type="text" 
+                                                    required
+                                                    value={inputStdId}
+                                                    onChange={(e) => setInputStdId(e.target.value)}
+                                                    placeholder="예: 30101"
+                                                    class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1">이름</label>
+                                            <div class="relative">
+                                                <i class="fa-solid fa-user absolute left-3 top-3 text-slate-400 text-sm"></i>
+                                                <input 
+                                                    type="text" 
+                                                    required
+                                                    value={inputStdName}
+                                                    onChange={(e) => setInputStdName(e.target.value)}
+                                                    placeholder="예: 홍길동"
+                                                    class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1">비밀번호</label>
+                                            <div class="relative">
+                                                <i class="fa-solid fa-lock absolute left-3 top-3 text-slate-400 text-sm"></i>
+                                                <input 
+                                                    type="password" 
+                                                    required
+                                                    value={inputPassword}
+                                                    onChange={(e) => setInputPassword(e.target.value)}
+                                                    placeholder="비밀번호 입력"
+                                                    class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                                />
+                                            </div>
+                                            <p class="text-[11px] text-slate-400 mt-1">※ 초기 비밀번호 분실 시 담당 선생님께 리셋을 요청하세요.</p>
+                                        </div>
+                                        <button 
+                                            type="submit" 
+                                            class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm shadow-md hover:shadow-indigo-200 transition-all active:scale-[0.99]"
+                                        >
+                                            학생 대시보드 접속하기
+                                        </button>
+                                        
+                                        <div class="mt-4 pt-3 border-t border-slate-100 text-center text-xs text-slate-400">
+                                            테스트용 샘플 학번: <strong class="text-slate-600">30101</strong> / 비밀번호: <strong class="text-slate-600">1234</strong>
+                                        </div>
+                                    </form>
+                                ) : (
+                                    <form onSubmit={handleTeacherLogin} class="space-y-4">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-600 mb-1">교사용 관리자 인증 암호</label>
+                                            <div class="relative">
+                                                <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
+                                                <input 
+                                                    type="password" 
+                                                    required
+                                                    value={teacherPass}
+                                                    onChange={(e) => setTeacherPass(e.target.value)}
+                                                    placeholder="교사 전용 암호 입력 (초기: teacher1234)"
+                                                    class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="submit" 
+                                            class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm shadow-md hover:shadow-emerald-200 transition-all active:scale-[0.99]"
+                                        >
+                                            교사 코칭 관리자 접속
+                                        </button>
+                                        
+                                        <div class="mt-4 pt-3 border-t border-slate-100 text-center text-xs text-slate-400">
+                                            교사 초기 비밀번호: <strong class="text-slate-600">teacher1234</strong>
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (currentAuth.role === 'teacher') {
+                const selectedStdObj = students.find(s => s.id === selectedStudentId) || students[0];
+
+                const handleAddStudent = () => {
+                    const name = prompt("신규 학생 이름:");
+                    if (!name) return;
+                    const stdId = prompt("신규 학생 학번 (예: 30103):");
+                    if (!stdId) return;
+                    
+                    if (students.some(s => s.studentId === stdId)) {
+                        alert("이미 존재하거나 중복된 학번입니다.");
+                        return;
+                    }
+
+                    const newStd = {
+                        id: `std_${Date.now()}`,
+                        studentId: stdId,
+                        name: name,
+                        password: "1234", // Default password
+                        universities: [],
+                        answers: []
+                    };
+                    setStudents([...students, newStd]);
+                    setSelectedStudentId(newStd.id);
+                    alert(`학생 [${name}] 등록 완료! (초기 비밀번호: 1234)`);
+                };
+
+                const handleTeacherSaveFeedback = (answerId, feedbackText) => {
+                    if (!selectedStdObj) return;
+                    const updatedAns = selectedStdObj.answers.map(a => 
+                        a.id === answerId ? { ...a, feedback: feedbackText } : a
+                    );
+                    updateStudentData({ ...selectedStdObj, answers: updatedAns });
+                    setFeedbackNotice("피드백이 저장되었습니다!");
+                    setTimeout(() => setFeedbackNotice(""), 2500);
+                };
+
+                const handleChangeStudentPassword = (e) => {
+                    e.preventDefault();
+                    if (!newPasswordInput.trim()) return;
+                    updateStudentData({ ...selectedStdObj, password: newPasswordInput.trim() });
+                    alert(`[${selectedStdObj.name}] 학생의 비밀번호가 성공적으로 변경되었습니다.`);
+                    setNewPasswordInput('');
+                };
+
+                return (
+                    <div class="min-h-screen flex flex-col bg-slate-100">
+                        {/* Teacher Header Navigation */}
+                        <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30">
+                            <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg border border-emerald-500/30">
+                                        <i class="fa-solid fa-user-shield"></i>
+                                    </div>
+                                    <div>
+                                        <h1 class="font-bold text-base leading-none">면접 방과후 교사 지도 시스템</h1>
+                                        <p class="text-[11px] text-slate-400 mt-1">학생 모니터링 & 비밀번호 관리 & 답변 첨삭 피드백</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-semibold rounded-full border border-emerald-500/30">
+                                        <i class="fa-solid fa-circle text-[8px] mr-1 text-emerald-400 animate-pulse"></i> 교사 모드
+                                    </span>
+                                    <button 
+                                        onClick={handleLogout}
+                                        class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-medium transition-colors border border-slate-700"
+                                    >
+                                        <i class="fa-solid fa-right-from-bracket mr-1"></i> 로그아웃
+                                    </button>
+                                </div>
+                            </div>
+                        </header>
+
+                        {/* Main Teacher Workspace */}
+                        <div class="max-w-7xl mx-auto w-full p-4 md:p-6 flex-1 flex flex-col md:flex-row gap-6">
+                            {/* Left Sidebar: Student Selection */}
+                            <div class="w-full md:w-80 shrink-0 space-y-4">
+                                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h2 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-users text-indigo-500"></i> 지도 학생 목록 ({students.length}명)
+                                        </h2>
+                                        <button 
+                                            onClick={handleAddStudent}
+                                            class="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs font-medium transition-colors"
+                                            title="학생 추가"
+                                        >
+                                            <i class="fa-solid fa-plus mr-1"></i> 학생등록
+                                        </button>
+                                    </div>
+                                    <div class="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+                                        {students.map(std => {
+                                            const isSelected = std.id === selectedStudentId;
+                                            const feedbackCount = std.answers.filter(a => a.feedback && a.feedback.trim() !== '').length;
+                                            return (
+                                                <button
+                                                    key={std.id}
+                                                    onClick={() => setSelectedStudentId(std.id)}
+                                                    class={`w-full text-left p-3 rounded-xl transition-all border ${isSelected ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+                                                >
+                                                    <div class="flex justify-between items-start mb-1">
+                                                        <span class="font-bold text-slate-800 text-sm">{std.name} <span class="text-xs font-normal text-slate-500">({std.studentId})</span></span>
+                                                        <span class="text-[10px] bg-white px-2 py-0.5 rounded border text-slate-500">PW: {std.password}</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 text-[11px] text-slate-500">
+                                                        <span><i class="fa-solid fa-university text-slate-400"></i> 지원대학: {std.universities.length}개</span>
+                                                        <span>•</span>
+                                                        <span><i class="fa-solid fa-comment-dots text-emerald-500"></i> 피드백: {feedbackCount}/{std.answers.length}</span>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Content Area: Student Details & Coaching */}
+                            <div class="flex-1 flex flex-col space-y-4">
+                                {feedbackNotice && (
+                                    <div class="p-3 bg-emerald-500 text-white text-xs rounded-xl shadow-md flex items-center justify-between transition-all">
+                                        <span><i class="fa-solid fa-circle-check mr-2"></i> {feedbackNotice}</span>
+                                    </div>
+                                )}
+
+                                {selectedStdObj ? (
+                                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-5">
+                                        {/* Student Header Summary */}
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-3">
+                                            <div>
+                                                <div class="flex items-center gap-2">
+                                                    <h2 class="text-xl font-bold text-slate-800">{selectedStdObj.name} 학생</h2>
+                                                    <span class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">학번 {selectedStdObj.studentId}</span>
+                                                </div>
+                                                <p class="text-xs text-slate-500 mt-1">학생이 제출한 대학교 모집요강 정보 및 예상 질문 피드백을 진행합니다.</p>
+                                            </div>
+
+                                            {/* Teacher Tabs */}
+                                            <div class="flex bg-slate-100 p-1 rounded-xl">
+                                                <button 
+                                                    onClick={() => setTeacherTab('answers')}
+                                                    class={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${teacherTab === 'answers' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600'}`}
+                                                >
+                                                    <i class="fa-solid fa-pen-to-square mr-1"></i> 답변 첨삭 ({selectedStdObj.answers.length})
+                                                </button>
+                                                <button 
+                                                    onClick={() => setTeacherTab('univs')}
+                                                    class={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${teacherTab === 'univs' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600'}`}
+                                                >
+                                                    <i class="fa-solid fa-building-columns mr-1"></i> 지원대학 ({selectedStdObj.universities.length})
+                                                </button>
+                                                <button 
+                                                    onClick={() => setTeacherTab('pwd_manage')}
+                                                    class={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${teacherTab === 'pwd_manage' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-600'}`}
+                                                >
+                                                    <i class="fa-solid fa-key mr-1"></i> 비밀번호 변경
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {}
+                                        {teacherTab === 'answers' && (
+                                            <div class="space-y-6">
+                                                {selectedStdObj.answers.length === 0 ? (
+                                                    <div class="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                                        <i class="fa-solid fa-pen-slash text-3xl mb-2"></i>
+                                                        <p class="text-xs">학생이 아직 작성한 질문 및 답변이 없습니다.</p>
+                                                    </div>
+                                                ) : (
+                                                    selectedStdObj.answers.map((ans, idx) => {
+                                                        const targetUniv = selectedStdObj.universities.find(u => u.id === ans.univId);
+                                                        return (
+                                                            <div key={ans.id} class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                                                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                                                    <div class="flex items-center gap-2">
+                                                                        <span class="px-2.5 py-0.5 bg-slate-800 text-white text-[11px] font-semibold rounded-md">Q{idx+1}</span>
+                                                                        <span class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 text-[11px] font-semibold rounded-md">{ans.category}</span>
+                                                                        {targetUniv && (
+                                                                            <span class="text-xs text-slate-500 font-medium">
+                                                                                <i class="fa-solid fa-university text-slate-400 mr-1"></i>{targetUniv.univName} ({targetUniv.deptName})
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <span class="text-[10px] text-slate-400">최종수정: {ans.updatedAt}</span>
+                                                                </div>
+
+                                                                {/* Question */}
+                                                                <h3 class="font-bold text-slate-800 text-sm">{ans.question}</h3>
+
+                                                                {/* Keywords */}
+                                                                {ans.keywords && (
+                                                                    <div class="p-2.5 bg-amber-50/60 border border-amber-200/80 rounded-xl text-xs text-amber-900">
+                                                                        <span class="font-semibold text-amber-800 mr-1"><i class="fa-solid fa-key text-amber-500"></i> 학생 답변 키워드:</span>
+                                                                        {ans.keywords}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Student Answer */}
+                                                                <div class="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                                                    {ans.answer || <span class="text-slate-400 italic">답변 미작성</span>}
+                                                                </div>
+
+                                                                {/* Teacher Feedback Box */}
+                                                                <div class="pt-2">
+                                                                    <label class="block text-xs font-bold text-emerald-800 mb-1 flex items-center gap-1">
+                                                                        <i class="fa-solid fa-comment-medical text-emerald-600"></i> 교사 첨삭 피드백 전달
+                                                                    </label>
+                                                                    <textarea
+                                                                        rows="3"
+                                                                        defaultValue={ans.feedback || ''}
+                                                                        placeholder="학생의 답변에 대한 두괄식 구성, 생기부 근거, 태도 및 보완점에 대해 피드백을 남겨주세요."
+                                                                        class="w-full p-3 bg-emerald-50/30 border border-emerald-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
+                                                                        onBlur={(e) => handleTeacherSaveFeedback(ans.id, e.target.value)}
+                                                                    ></textarea>
+                                                                    <p class="text-[10px] text-slate-400 mt-1">* 입력란 외부를 클릭하거나 다른 영역을 선택하면 피드백이 자동 저장됩니다.</p>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {teacherTab === 'univs' && (
+                                            <div class="space-y-4">
+                                                {selectedStdObj.universities.length === 0 ? (
+                                                    <p class="text-xs text-slate-400 text-center py-8">등록된 지원 대학교가 없습니다.</p>
+                                                ) : (
+                                                    selectedStdObj.universities.map(univ => (
+                                                        <div key={univ.id} class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                                                            <div class="flex justify-between items-start">
+                                                                <div>
+                                                                    <h3 class="font-bold text-slate-800 text-base">{univ.univName} <span class="text-indigo-600">{univ.deptName}</span></h3>
+                                                                    <span class="inline-block mt-1 px-2 py-0.5 bg-slate-200 text-slate-700 text-xs font-semibold rounded">전형: {univ.appType}</span>
+                                                                </div>
+                                                                <span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200 font-medium">
+                                                                    고사일: {univ.examDate || '미정'}
+                                                                </span>
+                                                            </div>
+                                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-2">
+                                                                <div class="bg-white p-2.5 rounded-xl border border-slate-200">
+                                                                    <span class="font-bold text-slate-700 block mb-0.5">반영 비율 및 고사 방식:</span>
+                                                                    <p class="text-slate-600">{univ.weightRatio || '미입력'}</p>
+                                                                </div>
+                                                                <div class="bg-white p-2.5 rounded-xl border border-slate-200">
+                                                                    <span class="font-bold text-slate-700 block mb-0.5">대학/학과 인재상:</span>
+                                                                    <p class="text-slate-600">{univ.talentModel || '미입력'}</p>
+                                                                </div>
+                                                                <div class="bg-white p-2.5 rounded-xl border border-slate-200 md:col-span-2">
+                                                                    <span class="font-bold text-slate-700 block mb-0.5">면접 참고사항 및 블라인드 주의사항:</span>
+                                                                    <p class="text-slate-600">{univ.notes || '미입력'}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {teacherTab === 'pwd_manage' && (
+                                            <div class="max-w-md bg-rose-50/50 p-5 rounded-2xl border border-rose-200 space-y-4">
+                                                <div>
+                                                    <h3 class="font-bold text-rose-800 text-sm flex items-center gap-2">
+                                                        <i class="fa-solid fa-user-lock"></i> 학생 개별 비밀번호 변경 (교사 전권)
+                                                    </h3>
+                                                    <p class="text-xs text-rose-600 mt-1">학생 요청 시 개별 비밀번호를 재설정해줄 수 있습니다.</p>
+                                                </div>
+                                                <form onSubmit={handleChangeStudentPassword} class="space-y-3">
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-slate-700 mb-1">현재 설정된 비밀번호</label>
+                                                        <input type="text" disabled value={selectedStdObj.password} class="w-full p-2.5 bg-slate-200 border border-slate-300 rounded-xl text-xs font-mono" />
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-slate-700 mb-1">새로운 비밀번호 입력</label>
+                                                        <input 
+                                                            type="text" 
+                                                            required
+                                                            placeholder="변경할 새 비밀번호"
+                                                            value={newPasswordInput}
+                                                            onChange={(e) => setNewPasswordInput(e.target.value)}
+                                                            class="w-full p-2.5 bg-white border border-rose-300 rounded-xl text-xs focus:ring-2 focus:ring-rose-500" 
+                                                        />
+                                                    </div>
+                                                    <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-xs shadow transition-colors">
+                                                        비밀번호 변경 저장하기
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div class="bg-white p-12 text-center text-slate-400 rounded-2xl">학생을 선택해주세요.</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            const studentFeedbackList = currentStudent.answers.filter(a => a.feedback && a.feedback.trim() !== '');
+
+            // Handlers for Student Editing
+            const handleAddUniversity = () => {
+                const univName = prompt("지원 대학교명 입력 (예: 아주대학교):");
+                if (!univName) return;
+                const deptName = prompt("지원 학과명 입력 (예: 영어영문학과):");
+                if (!deptName) return;
+                const appType = prompt("지원 전형 입력 (예: 학생부종합전형):") || "학생부종합";
+
+                const newUniv = {
+                    id: `univ_${Date.now()}`,
+                    univName,
+                    deptName,
+                    appType,
+                    examDate: "",
+                    examMethod: "",
+                    weightRatio: "",
+                    talentModel: "",
+                    evalFactors: "",
+                    notes: ""
+                };
+
+                const updatedUnivs = [...currentStudent.universities, newUniv];
+                updateStudentData({ ...currentStudent, universities: updatedUnivs });
+            };
+
+            const handleUpdateUnivDetail = (univId, field, value) => {
+                const updatedUnivs = currentStudent.universities.map(u => 
+                    u.id === univId ? { ...u, [field]: value } : u
+                );
+                updateStudentData({ ...currentStudent, universities: updatedUnivs });
+            };
+
+            const handleDeleteUniv = (univId) => {
+                if (!confirm("해당 대학 정보 및 관련 질문이 삭제됩니다. 계속하시겠습니까?")) return;
+                const updatedUnivs = currentStudent.universities.filter(u => u.id !== univId);
+                const updatedAnswers = currentStudent.answers.filter(a => a.univId !== univId);
+                updateStudentData({ ...currentStudent, universities: updatedUnivs, answers: updatedAnswers });
+            };
+
+            const handleAddAnswerItem = (categoryName, customQ = "") => {
+                const qText = customQ || prompt("예상 질문을 입력하세요:");
+                if (!qText) return;
+
+                const targetUnivId = currentStudent.universities[0]?.id || "univ_1";
+
+                const newAns = {
+                    id: `ans_${Date.now()}`,
+                    univId: targetUnivId,
+                    category: categoryName,
+                    question: qText,
+                    keywords: "",
+                    answer: "",
+                    feedback: "",
+                    updatedAt: new Date().toISOString().split('T')[0]
+                };
+
+                updateStudentData({ ...currentStudent, answers: [...currentStudent.answers, newAns] });
+            };
+
+            const handleUpdateAnswerField = (ansId, field, val) => {
+                const updatedAnswers = currentStudent.answers.map(a => 
+                    a.id === ansId ? { ...a, [field]: val, updatedAt: new Date().toISOString().split('T')[0] } : a
+                );
+                updateStudentData({ ...currentStudent, answers: updatedAnswers });
+            };
+
+            const handleDeleteAnswer = (ansId) => {
+                if (!confirm("이 답변 항목을 삭제하시겠습니까?")) return;
+                const updatedAnswers = currentStudent.answers.filter(a => a.id !== ansId);
+                updateStudentData({ ...currentStudent, answers: updatedAnswers });
+            };
+
+            return (
+                <div class="min-h-screen flex flex-col bg-slate-50">
+                    {/* Student Top Header */}
+                    <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-slate-900 text-white shadow-lg sticky top-0 z-30">
+                        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-xl backdrop-blur-md border border-white/20">
+                                    <i class="fa-solid fa-graduation-cap text-indigo-200"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h1 class="font-bold text-base leading-none">{currentStudent.name}의 면접 합격 노트</h1>
+                                        <span class="text-[11px] bg-indigo-500/30 px-2 py-0.5 rounded border border-indigo-400/30 text-indigo-200 font-mono">학번: {currentStudent.studentId}</span>
+                                    </div>
+                                    <p class="text-[11px] text-indigo-200 mt-1">비밀번호 변경 권한: 교사 전용 (보안 유지)</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 sm:gap-3">
+                                {studentFeedbackList.length > 0 && (
+                                    <button 
+                                        onClick={() => setActiveTab('feedback')}
+                                        class="px-3 py-1.5 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 text-xs font-semibold rounded-lg border border-emerald-500/40 flex items-center gap-1.5 animate-bounce"
+                                    >
+                                        <i class="fa-solid fa-bell text-emerald-400"></i>
+                                        <span>교사 피드백 {studentFeedbackList.length}건 수신</span>
+                                    </button>
+                                )}
+                                <button 
+                                    onClick={handleLogout}
+                                    class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition-all backdrop-blur-sm border border-white/10"
+                                >
+                                    <i class="fa-solid fa-right-from-bracket mr-1"></i> 로그아웃
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Navigation Tabs Bar */}
+                        <div class="max-w-7xl mx-auto px-4 flex overflow-x-auto custom-scrollbar border-t border-white/10 text-xs font-semibold">
+                            <button 
+                                onClick={() => setActiveTab('univs')}
+                                class={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'univs' ? 'border-amber-400 text-amber-300 bg-white/5' : 'border-transparent text-indigo-200 hover:text-white'}`}
+                            >
+                                <i class="fa-solid fa-university"></i> 1. 지원 대학 및 모집요강
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('common_ans')}
+                                class={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'common_ans' ? 'border-amber-400 text-amber-300 bg-white/5' : 'border-transparent text-indigo-200 hover:text-white'}`}
+                            >
+                                <i class="fa-solid fa-list-check"></i> 2. 공통 예상 질문 노트
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('record_ans')}
+                                class={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'record_ans' ? 'border-amber-400 text-amber-300 bg-white/5' : 'border-transparent text-indigo-200 hover:text-white'}`}
+                            >
+                                <i class="fa-solid fa-file-pen"></i> 3. 생기부/제시문 예상 질문
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('feedback')}
+                                class={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-all relative ${activeTab === 'feedback' ? 'border-amber-400 text-amber-300 bg-white/5' : 'border-transparent text-indigo-200 hover:text-white'}`}
+                            >
+                                <i class="fa-solid fa-comments"></i> 4. 선생님 피드백 확인함
+                                {studentFeedbackList.length > 0 && (
+                                    <span class="ml-1 w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+                                )}
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('guide')}
+                                class={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'guide' ? 'border-amber-400 text-amber-300 bg-white/5' : 'border-transparent text-indigo-200 hover:text-white'}`}
+                            >
+                                <i class="fa-solid fa-book-open"></i> 5. 면접 방과후 가이드&꿀팁
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* Student Main Body View */}
+                    <main class="max-w-7xl mx-auto w-full p-4 md:p-6 flex-1">
+                        
+                        {}
+                        {activeTab === 'univs' && (
+                            <div class="space-y-6">
+                                <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-2xl border border-indigo-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                    <div>
+                                        <h2 class="text-base font-bold text-indigo-950 flex items-center gap-2">
+                                            <i class="fa-solid fa-school text-indigo-600"></i> 내 지원 대학 및 학교 홈페이지 모집요강 분석
+                                        </h2>
+                                        <p class="text-xs text-indigo-700 mt-0.5">지원하는 각 대학교의 반영 비율, 면접 고사 방식, 대학/학과 인재상을 꼼꼼하게 적고 면접에 대비하세요.</p>
+                                    </div>
+                                    <button 
+                                        onClick={handleAddUniversity}
+                                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition-all flex items-center gap-1.5 shrink-0"
+                                    >
+                                        <i class="fa-solid fa-plus"></i> 지원 대학 추가하기
+                                    </button>
+                                </div>
+
+                                {currentStudent.universities.length === 0 ? (
+                                    <div class="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 space-y-3">
+                                        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center text-xl">
+                                            <i class="fa-solid fa-building-columns"></i>
+                                        </div>
+                                        <p class="text-xs font-medium text-slate-500">아직 등록된 지원 대학이 없습니다. [지원 대학 추가하기] 버튼을 누르세요.</p>
+                                    </div>
+                                ) : (
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {currentStudent.universities.map(univ => (
+                                            <div key={univ.id} class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 relative">
+                                                <button 
+                                                    onClick={() => handleDeleteUniv(univ.id)}
+                                                    class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 text-xs p-1"
+                                                    title="대학 삭제"
+                                                >
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+
+                                                <div class="border-b border-slate-100 pb-3 pr-8">
+                                                    <div class="flex items-center gap-2">
+                                                        <h3 class="font-bold text-slate-800 text-lg">{univ.univName}</h3>
+                                                        <span class="text-indigo-600 font-bold text-lg">{univ.deptName}</span>
+                                                    </div>
+                                                    <div class="mt-1 flex items-center gap-2">
+                                                        <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 font-semibold text-xs rounded border border-indigo-200">{univ.appType}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Edit Form Fields for Prospectus */}
+                                                <div class="space-y-3 text-xs">
+                                                    <div>
+                                                        <label class="font-bold text-slate-700 block mb-1">고사일시 및 장소</label>
+                                                        <input 
+                                                            type="text"
+                                                            value={univ.examDate}
+                                                            onChange={(e) => handleUpdateUnivDetail(univ.id, 'examDate', e.target.value)}
+                                                            placeholder="예: 2026.11.21(토) 14:00 / 인문관 301호"
+                                                            class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="font-bold text-slate-700 block mb-1">모집요강 단계별 반영 비율 & 고사 방법</label>
+                                                        <textarea 
+                                                            rows="2"
+                                                            value={univ.weightRatio}
+                                                            onChange={(e) => handleUpdateUnivDetail(univ.id, 'weightRatio', e.target.value)}
+                                                            placeholder="예: 1단계 서류 100%(3배수) -> 2단계 1단계 70% + 면접 30%"
+                                                            class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                                        ></textarea>
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="font-bold text-slate-700 block mb-1">대학 및 학과 인재상 / 교육 목표</label>
+                                                        <textarea 
+                                                            rows="2"
+                                                            value={univ.talentModel}
+                                                            onChange={(e) => handleUpdateUnivDetail(univ.id, 'talentModel', e.target.value)}
+                                                            placeholder="학교 홈페이지에서 확인하여 인재상 키워드 기재"
+                                                            class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                                        ></textarea>
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="font-bold text-slate-700 block mb-1">평가 요소 및 면접 참고사항 (블라인드 여부 등)</label>
+                                                        <textarea 
+                                                            rows="2"
+                                                            value={univ.notes}
+                                                            onChange={(e) => handleUpdateUnivDetail(univ.id, 'notes', e.target.value)}
+                                                            placeholder="예: 전공적합성 40%, 인성 30%. 교복착용 금지, 이름 언급 금지."
+                                                            class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                                        ></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 2. Common Questions Tab */}
+                        {activeTab === 'common_ans' && (
+                            <div class="space-y-6">
+                                <div class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md space-y-2">
+                                    <h2 class="font-bold text-base flex items-center gap-2">
+                                        <i class="fa-solid fa-list-check text-amber-400"></i> 대입 면접 공통 빈출 질문 {COMMON_QUESTIONS.length}선 키워드 노트
+                                    </h2>
+                                    <p class="text-xs text-indigo-200 leading-relaxed">
+                                        활동지에 수록된 자주 나오는 핵심 질문들입니다. 답변을 달달 암기하기보다 **주요 키워드** 중심으로 정리하고 두괄식으로 말하는 연습을 하세요.
+                                    </p>
+                                </div>
+
+                                {/* Common Questions Grid/List */}
+                                <div class="space-y-4">
+                                    {COMMON_QUESTIONS.map((qText, index) => {
+                                        const existingAns = currentStudent.answers.find(a => a.question === qText);
+
+                                        return (
+                                            <div key={index} class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                                                <div class="flex items-center justify-between">
+                                                    <h3 class="font-bold text-slate-800 text-sm">{qText}</h3>
+                                                    {existingAns?.feedback && (
+                                                        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-lg border border-emerald-200 flex items-center gap-1">
+                                                            <i class="fa-solid fa-comment-dots"></i> 선생님 피드백 완료
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Keyword Box */}
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-amber-800 mb-1">
+                                                        <i class="fa-solid fa-key text-amber-500"></i> 핵심 답변 키워드 (달달 암기 지양!)
+                                                    </label>
+                                                    <input 
+                                                        type="text"
+                                                        value={existingAns?.keywords || ''}
+                                                        onChange={(e) => {
+                                                            if (existingAns) {
+                                                                handleUpdateAnswerField(existingAns.id, 'keywords', e.target.value);
+                                                            } else {
+                                                                // Create new entry
+                                                                const newA = {
+                                                                    id: `ans_${Date.now()}`,
+                                                                    univId: currentStudent.universities[0]?.id || 'univ_1',
+                                                                    category: '공통',
+                                                                    question: qText,
+                                                                    keywords: e.target.value,
+                                                                    answer: '',
+                                                                    feedback: '',
+                                                                    updatedAt: new Date().toISOString().split('T')[0]
+                                                                };
+                                                                updateStudentData({ ...currentStudent, answers: [...currentStudent.answers, newA] });
+                                                            }
+                                                        }}
+                                                        placeholder="예: 갈등극복, 옴니버스 연극, 경청의 자세"
+                                                        class="w-full p-2 bg-amber-50/50 border border-amber-200 rounded-xl text-xs text-amber-950 focus:ring-2 focus:ring-amber-400"
+                                                    />
+                                                </div>
+
+                                                {/* Full Answer Area */}
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">구체적 답변 내용 (두괄식: 결론 - 과거 - 현재 - 미래)</label>
+                                                    <textarea 
+                                                        rows="3"
+                                                        value={existingAns?.answer || ''}
+                                                        onChange={(e) => {
+                                                            if (existingAns) {
+                                                                handleUpdateAnswerField(existingAns.id, 'answer', e.target.value);
+                                                            } else {
+                                                                const newA = {
+                                                                    id: `ans_${Date.now()}`,
+                                                                    univId: currentStudent.universities[0]?.id || 'univ_1',
+                                                                    category: '공통',
+                                                                    question: qText,
+                                                                    keywords: '',
+                                                                    answer: e.target.value,
+                                                                    feedback: '',
+                                                                    updatedAt: new Date().toISOString().split('T')[0]
+                                                                };
+                                                                updateStudentData({ ...currentStudent, answers: [...currentStudent.answers, newA] });
+                                                            }
+                                                        }}
+                                                        placeholder="답변 내용을 정리하여 작성하세요..."
+                                                        class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 leading-relaxed focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                                    ></textarea>
+                                                </div>
+
+                                                {/* Teacher Feedback Display if present */}
+                                                {existingAns?.feedback && (
+                                                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
+                                                        <span class="text-xs font-bold text-emerald-800 flex items-center gap-1">
+                                                            <i class="fa-solid fa-graduation-cap"></i> 담당 선생님 피드백:
+                                                        </span>
+                                                        <p class="text-xs text-emerald-900 leading-relaxed font-medium">{existingAns.feedback}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {}
+                        {activeTab === 'record_ans' && (
+                            <div class="space-y-6">
+                                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div>
+                                        <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                                            <i class="fa-solid fa-file-lines text-indigo-600"></i> 생기부 기반 & 제시문/시사 예상 질문 추가
+                                        </h2>
+                                        <p class="text-xs text-slate-500 mt-0.5">자율활동, 동아리, 진로, 과세특, 전공 시사이슈 등 생기부에서 질문을 직접 뽑고 정리하세요.</p>
+                                    </div>
+
+                                    {/* Category Add Buttons */}
+                                    <div class="flex flex-wrap gap-2">
+                                        {['생기부-자율', '생기부-동아리', '생기부-진로', '생기부-과세특', '제시문/시사'].map(cat => (
+                                            <button 
+                                                key={cat}
+                                                onClick={() => handleAddAnswerItem(cat)}
+                                                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-xl border border-indigo-200 transition-colors"
+                                            >
+                                                + {cat}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Answers Filtered List */}
+                                <div class="space-y-4">
+                                    {currentStudent.answers.filter(a => a.category !== '공통').length === 0 ? (
+                                        <div class="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
+                                            <p class="text-xs text-slate-400">위 버튼을 클릭하여 생기부 항목별 예상 질문을 추가해보세요.</p>
+                                        </div>
+                                    ) : (
+                                        currentStudent.answers.filter(a => a.category !== '공통').map(ans => (
+                                            <div key={ans.id} class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 relative">
+                                                <button 
+                                                    onClick={() => handleDeleteAnswer(ans.id)}
+                                                    class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 text-xs"
+                                                >
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+
+                                                <div class="flex items-center gap-2">
+                                                    <span class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-md">{ans.category}</span>
+                                                    <span class="text-[11px] text-slate-400">최종수정: {ans.updatedAt}</span>
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">예상 질문 내용</label>
+                                                    <input 
+                                                        type="text"
+                                                        value={ans.question}
+                                                        onChange={(e) => handleUpdateAnswerField(ans.id, 'question', e.target.value)}
+                                                        placeholder="질문 제목 입력"
+                                                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-amber-800 mb-1">답변 핵심 키워드</label>
+                                                    <input 
+                                                        type="text"
+                                                        value={ans.keywords}
+                                                        onChange={(e) => handleUpdateAnswerField(ans.id, 'keywords', e.target.value)}
+                                                        placeholder="답변 핵심 단어"
+                                                        class="w-full p-2 bg-amber-50/50 border border-amber-200 rounded-xl text-xs"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">상세 답변 (동기 - 원인/과정 - 결과 - 성찰 및 배운점)</label>
+                                                    <textarea 
+                                                        rows="3"
+                                                        value={ans.answer}
+                                                        onChange={(e) => handleUpdateAnswerField(ans.id, 'answer', e.target.value)}
+                                                        placeholder="나만의 구체적 생기부 기반 답변 작성..."
+                                                        class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs leading-relaxed"
+                                                    ></textarea>
+                                                </div>
+
+                                                {ans.feedback && (
+                                                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                                                        <span class="text-xs font-bold text-emerald-800 flex items-center gap-1 mb-1">
+                                                            <i class="fa-solid fa-graduation-cap"></i> 선생님 피드백:
+                                                        </span>
+                                                        <p class="text-xs text-emerald-900 leading-relaxed">{ans.feedback}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {}
+                        {activeTab === 'feedback' && (
+                            <div class="space-y-6">
+                                <div class="bg-emerald-900 text-white p-5 rounded-2xl shadow-md space-y-1">
+                                    <h2 class="font-bold text-base flex items-center gap-2">
+                                        <i class="fa-solid fa-comments text-emerald-400"></i> 담당 선생님 피드백 모아보기
+                                    </h2>
+                                    <p class="text-xs text-emerald-200">선생님께서 지도하고 남겨주신 실시간 첨삭 피드백입니다. 면접 전 반드시 복습하세요!</p>
+                                </div>
+
+                                {studentFeedbackList.length === 0 ? (
+                                    <div class="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 space-y-2">
+                                        <i class="fa-solid fa-comment-slash text-3xl text-slate-300"></i>
+                                        <p class="text-xs text-slate-400">아직 등록된 선생님의 피드백이 없습니다. 답변을 작성하고 피드백을 요청하세요!</p>
+                                    </div>
+                                ) : (
+                                    <div class="space-y-4">
+                                        {studentFeedbackList.map(ans => (
+                                            <div key={ans.id} class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm space-y-3">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 font-bold text-xs rounded-md">{ans.category}</span>
+                                                    <span class="text-[10px] text-slate-400">최종 피드백 확인</span>
+                                                </div>
+                                                <h3 class="font-bold text-slate-800 text-sm">Q: {ans.question}</h3>
+                                                
+                                                <div class="p-3 bg-slate-50 rounded-xl text-xs text-slate-600 border border-slate-200">
+                                                    <span class="font-bold block text-slate-700 mb-0.5">내가 제출한 답변:</span>
+                                                    {ans.answer}
+                                                </div>
+
+                                                <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-300 text-xs text-emerald-950 space-y-1">
+                                                    <span class="font-bold text-emerald-800 flex items-center gap-1.5">
+                                                        <i class="fa-solid fa-user-tie text-emerald-600"></i> 선생님의 합격 첨삭 조언:
+                                                    </span>
+                                                    <p class="leading-relaxed font-medium">{ans.feedback}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {}
+                        {activeTab === 'guide' && (
+                            <div class="space-y-6">
+                                {/* Banner */}
+                                <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-6 rounded-2xl shadow-md">
+                                    <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
+                                        <i class="fa-solid fa-award text-amber-400"></i> 면접 방과후 OT & 면접왕 지침서
+                                    </h2>
+                                    <p class="text-xs text-indigo-200 leading-relaxed">
+                                        "우리는 최종합격으로 가는 한 배를 탔습니다. 자신만의 확실한 철학과 주관을 갖고 면접관을 매료시키는 연기에 몰입하세요!"
+                                    </p>
+                                </div>
+
+                                {/* OT Goals */}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                                        <h3 class="font-bold text-indigo-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+                                            <i class="fa-solid fa-bullseye text-rose-500"></i> 면접 방과후 5대 핵심 목표
+                                        </h3>
+                                        <ul class="space-y-2 text-xs text-slate-700">
+                                            {OT_GUIDE_CONTENT.goals.map((g, idx) => (
+                                                <li key={idx} class="flex items-center gap-2 font-medium">
+                                                    <i class="fa-solid fa-check text-emerald-500"></i> {g}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Blind Rules */}
+                                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+                                            <i class="fa-solid fa-user-slash text-rose-600"></i> 블라인드 면접 필수 주의사항
+                                        </h3>
+                                        <ul class="space-y-2 text-xs text-slate-700">
+                                            {OT_GUIDE_CONTENT.blindRules.map((rule, idx) => (
+                                                <li key={idx} class="p-2 bg-rose-50 border border-rose-100 text-rose-900 rounded-xl font-medium">
+                                                    ⚠️ {rule}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {/* 5 Roadmaps */}
+                                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+                                        <i class="fa-solid fa-map-location-dot text-indigo-600"></i> 면접왕으로 가는 5가지 핵심 비법
+                                    </h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        {OT_GUIDE_CONTENT.fiveRules.map((rule, idx) => (
+                                            <div key={idx} class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                                                <span class="font-bold text-indigo-700 text-xs block">{rule.title}</span>
+                                                <p class="text-[11px] text-slate-600 leading-relaxed">{rule.desc}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Technical & Behavior Guides */}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Tech Tips */}
+                                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+                                            <i class="fa-solid fa-comments text-amber-500"></i> 논리적 답변 스킬 및 비법
+                                        </h3>
+                                        <div class="space-y-3">
+                                            {OT_GUIDE_CONTENT.techTips.map((tip, idx) => (
+                                                <div key={idx} class="p-3 bg-amber-50/60 rounded-xl border border-amber-200/80">
+                                                    <span class="font-bold text-amber-900 text-xs block mb-1">{tip.title}</span>
+                                                    <p class="text-xs text-amber-950 leading-relaxed">{tip.text}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Attitude & Procedures */}
+                                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+                                            <i class="fa-solid fa-person-walking-arrow-right text-emerald-600"></i> 입실부터 퇴실까지 태도 및 행동 요령
+                                        </h3>
+                                        <ul class="space-y-2 text-xs text-slate-700">
+                                            {OT_GUIDE_CONTENT.attitudeTips.map((att, idx) => (
+                                                <li key={idx} class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start gap-2">
+                                                    <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">{idx+1}</span>
+                                                    <span class="leading-relaxed">{att}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Footer */}
+                    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+                        면접 방과후 코칭 시스템 • 최종합격을 응원합니다!
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
