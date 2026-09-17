@@ -28,64 +28,10 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // 1. Supabase 연동 설정
-        const NEXT_PUBLIC_SUPABASE_URL = "https://wrravgqujpdkecjabmdd.supabase.co/rest/v1/";
+        // 1. Supabase 연동 설정 (올바른 URL 형식 적용)
+        const NEXT_PUBLIC_SUPABASE_URL = "https://wrravgqujpdkecjabmdd.supabase.co";
         const NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycmF2Z3F1anBka2VjamFibWRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MTIyNjQsImV4cCI6MjEwNTE4ODI2NH0.w5JAOlHqA2ONV2UmXA_xwcxYktRESBcoKfSowil9JQs";
         const supabaseClient = supabase.createClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
-
-        // Initial Default Mock Data
-        const DEFAULT_STUDENTS = [
-            {
-                id: "std_30101",
-                studentId: "30101",
-                name: "학생",
-                password: "1234",
-                universities: [
-                    {
-                        id: "univ_1",
-                        univName: "아주대학교",
-                        deptName: "영어영문학과",
-                        appType: "학생부종합(ACE전형)",
-                        examDate: "2026.11.21(토) 14:00 / 인문관 301호",
-                        examMethod: "1단계: 서류 100% (3배수) / 2단계: 1단계 70% + 면접 30%",
-                        weightRatio: "서류평가 70% + 면접 30%",
-                        talentModel: "글로벌 의사소통 능력을 갖추고 인문학적 리더십을 갖춘 융합형 인재",
-                        evalFactors: "전공적합성(40%), 발전가능성(30%), 인성 및 공동체역량(30%)",
-                        notes: "블라인드 면접(교복 착용 금지, 이름/출신고교 언급 엄금). 면접관 2~3명, 개별 10~15분 진행."
-                    }
-                ],
-                answers: [
-                    {
-                        id: "ans_1",
-                        univId: "univ_1",
-                        category: "공통",
-                        question: "우리 학교와 학과에 지원하게 된 동기를 말해보세요.",
-                        keywords: "세계와 학생을 잇는 다리, 프렌즈, 욕망이라는 이름의 전차, 교직이수",
-                        answer: "저는 유창한 의사소통능력과 영어영문학 분야에 대한 깊은 이해를 바탕으로 학생과 세계를 이어주는 다리 같은 영어교사가 되기 위해 아주대학교 영어영문학과에 지원했습니다.\n\n고등학교 시절 드라마 '프렌즈'를 통해 영어권 문화와 의사소통능력을 향상시켰고, '욕망이라는 이름의 전차'를 읽으며 영문학 분야의 정서적 깊이에 매료되었습니다. 아주대학교 영어영문학과에는 '현대영미드라마의 이해' 과정 및 교직과정이 개설되어 있어, 제 꿈을 구체화하기에 최선의 선택이라고 확신합니다.",
-                        feedback: "두괄식 구성과 본인의 경험(과거-현재-미래)이 논리적으로 잘 연결되었습니다! 아주대학교의 특화 과목명을 언급한 점이 감점 없는 강점입니다.",
-                        updatedAt: "2026-09-16"
-                    },
-                    {
-                        id: "ans_2",
-                        univId: "univ_1",
-                        category: "생기부-동아리",
-                        question: "영미문학 탐구동아리에서 진행한 프로젝트 중 가장 기억에 남는 활동과 본인의 역할은 무엇인가요?",
-                        keywords: "영미 고전 리메이크 연극 극본 작성, 갈등 조정, 문화적 맥락 재해석",
-                        answer: "동아리에서 '시련(The Crucible)'을 현대 한국의 사이버 렉카 및 마녀사냥 현상과 비교 탐구하여 단편 극본을 제작한 활동이 가장 기억에 남습니다.\n\n저는 기획 총괄 및 극본 수정을 담당했습니다. 부원 간 주제 해석 방식의 차이로 갈등이 생겼을 때, 각자의 아이디어를 옴니버스 형식으로 결합하는 대안을 제시하여 성공적으로 발표회를 마쳤습니다.",
-                        feedback: "",
-                        updatedAt: "2026-09-17"
-                    }
-                ]
-            },
-            {
-                id: "std_30102",
-                studentId: "30102",
-                name: "이합격",
-                password: "5678",
-                universities: [],
-                answers: []
-            }
-        ];
 
         const OT_GUIDE_CONTENT = {
             goals: [
@@ -145,10 +91,8 @@
         ];
 
         function App() {
-            const [students, setStudents] = React.useState(() => {
-                const saved = localStorage.getItem('interview_app_students');
-                return saved ? JSON.parse(saved) : DEFAULT_STUDENTS;
-            });
+            const [students, setStudents] = React.useState([]);
+            const [loading, setLoading] = React.useState(true);
             
             const [currentAuth, setCurrentAuth] = React.useState(() => {
                 const savedAuth = localStorage.getItem('interview_app_auth');
@@ -167,15 +111,41 @@
             const [activeTab, setActiveTab] = React.useState('univs');
 
             // Teacher View State
-            const [selectedStudentId, setSelectedStudentId] = React.useState(students[0]?.id || '');
+            const [selectedStudentId, setSelectedStudentId] = React.useState('');
             const [teacherTab, setTeacherTab] = React.useState('answers');
             const [newPasswordInput, setNewPasswordInput] = React.useState('');
             const [feedbackNotice, setFeedbackNotice] = React.useState('');
 
-            // Save to LocalStorage on change
+            // 앱 렌더링 시 Supabase 데이터베이스로부터 실시간 동기화
             React.useEffect(() => {
-                localStorage.setItem('interview_app_students', JSON.stringify(students));
-            }, [students]);
+                fetchStudentsFromSupabase();
+            }, []);
+
+            const fetchStudentsFromSupabase = async () => {
+                setLoading(true);
+                const { data, error } = await supabaseClient
+                    .from('students')
+                    .select('*');
+
+                if (error) {
+                    console.error("DB 데이터 로드 오류:", error.message);
+                } else if (data) {
+                    // DB 구조 정리 및 state 반영
+                    const formattedStudents = data.map(std => ({
+                        id: std.id,
+                        studentId: std.student_id || std.studentId,
+                        name: std.name || '학생',
+                        password: std.password || '1234',
+                        universities: std.universities || [],
+                        answers: std.answers || []
+                    }));
+                    setStudents(formattedStudents);
+                    if (formattedStudents.length > 0 && !selectedStudentId) {
+                        setSelectedStudentId(formattedStudents[0].id);
+                    }
+                }
+                setLoading(false);
+            };
 
             React.useEffect(() => {
                 if (currentAuth) {
@@ -185,27 +155,60 @@
                 }
             }, [currentAuth]);
 
+            // Supabase에 변경사항 저장하는 공통 함수
+            const updateStudentData = async (updatedStudent) => {
+                // local state 업데이트
+                setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+
+                // Supabase DB 저장
+                const { error } = await supabaseClient
+                    .from('students')
+                    .upsert({
+                        id: updatedStudent.id,
+                        student_id: updatedStudent.studentId,
+                        name: updatedStudent.name,
+                        password: updatedStudent.password,
+                        universities: updatedStudent.universities,
+                        answers: updatedStudent.answers
+                    });
+
+                if (error) {
+                    console.error("Supabase 저장 중 오류 발생:", error.message);
+                }
+            };
+
             // Handlers for Login
-            const handleStudentLogin = (e) => {
+            const handleStudentLogin = async (e) => {
                 e.preventDefault();
                 setLoginError('');
-                const found = students.find(s => s.studentId === inputStdId.trim());
+                
+                const found = students.find(s => String(s.studentId) === String(inputStdId.trim()));
+                
+                // 만약 DB에 존재하지 않는 학생일 경우 자동 신규 등록 후 로그인
                 if (!found) {
-                    setLoginError('등록되지 않은 학번입니다. 교사에게 문의하세요.');
-                    return;
-                }
-                if (found.password !== inputPassword) {
-                    setLoginError('비밀번호가 올바르지 않습니다.');
-                    return;
+                    const newStd = {
+                        id: `std_${Date.now()}`,
+                        studentId: inputStdId.trim(),
+                        name: inputStdName.trim() || '학생',
+                        password: inputPassword || '1234',
+                        universities: [],
+                        answers: []
+                    };
+                    await updateStudentData(newStd);
+                    setCurrentAuth({ role: 'student', studentId: newStd.studentId, id: newStd.id });
+                } else {
+                    if (found.password !== inputPassword) {
+                        setLoginError('비밀번호가 올바르지 않습니다.');
+                        return;
+                    }
+
+                    const updatedName = inputStdName.trim() || found.name || '학생';
+                    const updatedStudent = { ...found, name: updatedName };
+                    await updateStudentData(updatedStudent);
+
+                    setCurrentAuth({ role: 'student', studentId: found.studentId, id: found.id });
                 }
 
-                const updatedName = inputStdName.trim() || found.name || '학생';
-                const updatedStudents = students.map(s => 
-                    s.id === found.id ? { ...s, name: updatedName } : s
-                );
-                setStudents(updatedStudents);
-
-                setCurrentAuth({ role: 'student', studentId: found.studentId, id: found.id });
                 setInputStdId('');
                 setInputStdName('');
                 setInputPassword('');
@@ -228,11 +231,16 @@
             };
 
             // Helpers for current student data
-            const currentStudent = students.find(s => s.studentId === currentAuth?.studentId) || students[0];
+            const currentStudent = students.find(s => String(s.studentId) === String(currentAuth?.studentId)) || students[0] || { universities: [], answers: [] };
 
-            const updateStudentData = (updatedStudent) => {
-                setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
-            };
+            if (loading) {
+                return (
+                    <div class="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white space-y-4">
+                        <i class="fa-solid fa-spinner fa-spin text-4xl text-indigo-400"></i>
+                        <p class="text-sm font-medium">Supabase 클라우드 데이터베이스에서 정보를 불러오는 중...</p>
+                    </div>
+                );
+            }
 
             if (!currentAuth) {
                 return (
@@ -315,7 +323,7 @@
                                                     class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                                                 />
                                             </div>
-                                            <p class="text-[11px] text-slate-400 mt-1">※ 초기 비밀번호 분실 시 담당 선생님께 리셋을 요청하세요.</p>
+                                            <p class="text-[11px] text-slate-400 mt-1">※ 처음 로그인하는 학번이면 자동으로 신규 계정이 생성되어 DB에 보관됩니다.</p>
                                         </div>
                                         <button 
                                             type="submit" 
@@ -323,11 +331,6 @@
                                         >
                                             학생 대시보드 접속하기
                                         </button>
-                                        
-                                        {/* [요청 반영]: 학생용 비밀번호는 1234로 노출 */}
-                                        <div class="mt-4 pt-3 border-t border-slate-100 text-center text-xs text-slate-400">
-                                            테스트용 샘플 학번: <strong class="text-slate-600">30101</strong> / 비밀번호: <strong class="text-slate-600">1234</strong>
-                                        </div>
                                     </form>
                                 ) : (
                                     <form onSubmit={handleTeacherLogin} class="space-y-4">
@@ -351,8 +354,6 @@
                                         >
                                             교사 코칭 관리자 접속
                                         </button>
-                                        
-                                        {/* [요청 반영]: 교사 비밀번호 비공개(마스킹) 처리 */}
                                         <div class="mt-4 pt-3 border-t border-slate-100 text-center text-xs text-slate-400">
                                             교사 인증 암호: <strong class="text-slate-600">비공개 (담당자 문의)</strong>
                                         </div>
@@ -367,13 +368,13 @@
             if (currentAuth.role === 'teacher') {
                 const selectedStdObj = students.find(s => s.id === selectedStudentId) || students[0];
 
-                const handleAddStudent = () => {
+                const handleAddStudent = async () => {
                     const name = prompt("신규 학생 이름:");
                     if (!name) return;
                     const stdId = prompt("신규 학생 학번 (예: 30103):");
                     if (!stdId) return;
                     
-                    if (students.some(s => s.studentId === stdId)) {
+                    if (students.some(s => String(s.studentId) === String(stdId))) {
                         alert("이미 존재하거나 중복된 학번입니다.");
                         return;
                     }
@@ -386,7 +387,8 @@
                         universities: [],
                         answers: []
                     };
-                    setStudents([...students, newStd]);
+
+                    await updateStudentData(newStd);
                     setSelectedStudentId(newStd.id);
                     alert(`학생 [${name}] 등록 완료! (초기 비밀번호: 1234)`);
                 };
@@ -397,7 +399,7 @@
                         a.id === answerId ? { ...a, feedback: feedbackText } : a
                     );
                     updateStudentData({ ...selectedStdObj, answers: updatedAns });
-                    setFeedbackNotice("피드백이 저장되었습니다!");
+                    setFeedbackNotice("피드백이 DB에 저장되었습니다!");
                     setTimeout(() => setFeedbackNotice(""), 2500);
                 };
 
@@ -420,7 +422,7 @@
                                     </div>
                                     <div>
                                         <h1 class="font-bold text-base leading-none">면접 방과후 교사 지도 시스템</h1>
-                                        <p class="text-[11px] text-slate-400 mt-1">학생 모니터링 & 비밀번호 관리 & 답변 첨삭 피드백</p>
+                                        <p class="text-[11px] text-slate-400 mt-1">실시간 Supabase DB 모니터링 & 비밀번호 관리 & 답변 첨삭 피드백</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
@@ -576,7 +578,7 @@
                                                                         class="w-full p-3 bg-emerald-50/30 border border-emerald-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
                                                                         onBlur={(e) => handleTeacherSaveFeedback(ans.id, e.target.value)}
                                                                     ></textarea>
-                                                                    <p class="text-[10px] text-slate-400 mt-1">* 입력란 외부를 클릭하거나 다른 영역을 선택하면 피드백이 자동 저장됩니다.</p>
+                                                                    <p class="text-[10px] text-slate-400 mt-1">* 입력란 외부를 클릭하거나 다른 영역을 선택하면 피드백이 Supabase DB에 자동 저장됩니다.</p>
                                                                 </div>
                                                             </div>
                                                         );
@@ -749,7 +751,7 @@
                                         <h1 class="font-bold text-base leading-none">{currentStudent.name}의 면접 합격 노트</h1>
                                         <span class="text-[11px] bg-indigo-500/30 px-2 py-0.5 rounded border border-indigo-400/30 text-indigo-200 font-mono">학번: {currentStudent.studentId}</span>
                                     </div>
-                                    <p class="text-[11px] text-indigo-200 mt-1">비밀번호 변경 권한: 교사 전용 (보안 유지)</p>
+                                    <p class="text-[11px] text-indigo-200 mt-1">클라우드 데이터베이스 실시간 연동 완료</p>
                                 </div>
                             </div>
 
