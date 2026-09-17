@@ -31,16 +31,15 @@
         // 1. Supabase 연동 설정
         const NEXT_PUBLIC_SUPABASE_URL = "https://wrravgqujpdkecjabmdd.supabase.co";
         const NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_a-VNtWGc5wVODl0bMLTunA_fN-ktX6X";
-        // [오류 수정]: 정의된 변수명과 동일하게 맞춤
         const supabaseClient = supabase.createClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
-        // Initial Default Mock Data based on the provided PDF materials
+        // Initial Default Mock Data
         const DEFAULT_STUDENTS = [
             {
                 id: "std_30101",
                 studentId: "30101",
                 name: "학생",
-                password: "1234", // Default initial password
+                password: "1234",
                 universities: [
                     {
                         id: "univ_1",
@@ -146,7 +145,6 @@
         ];
 
         function App() {
-            // Local state management
             const [students, setStudents] = React.useState(() => {
                 const saved = localStorage.getItem('interview_app_students');
                 return saved ? JSON.parse(saved) : DEFAULT_STUDENTS;
@@ -158,7 +156,7 @@
             });
 
             // Login Modal Forms
-            const [loginRole, setLoginRole] = React.useState('student'); // 'student' or 'teacher'
+            const [loginRole, setLoginRole] = React.useState('student');
             const [inputStdId, setInputStdId] = React.useState('');
             const [inputStdName, setInputStdName] = React.useState('');
             const [inputPassword, setInputPassword] = React.useState('');
@@ -170,7 +168,7 @@
 
             // Teacher View State
             const [selectedStudentId, setSelectedStudentId] = React.useState(students[0]?.id || '');
-            const [teacherTab, setTeacherTab] = React.useState('answers'); // 'answers', 'univs', 'pwd_manage'
+            const [teacherTab, setTeacherTab] = React.useState('answers');
             const [newPasswordInput, setNewPasswordInput] = React.useState('');
             const [feedbackNotice, setFeedbackNotice] = React.useState('');
 
@@ -232,7 +230,6 @@
             // Helpers for current student data
             const currentStudent = students.find(s => s.studentId === currentAuth?.studentId) || students[0];
 
-            // Update student state helper
             const updateStudentData = (updatedStudent) => {
                 setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
             };
@@ -327,6 +324,7 @@
                                             학생 대시보드 접속하기
                                         </button>
                                         
+                                        {/* [요청 반영]: 학생용 비밀번호는 1234로 노출 */}
                                         <div class="mt-4 pt-3 border-t border-slate-100 text-center text-xs text-slate-400">
                                             테스트용 샘플 학번: <strong class="text-slate-600">30101</strong> / 비밀번호: <strong class="text-slate-600">1234</strong>
                                         </div>
@@ -354,8 +352,9 @@
                                             교사 코칭 관리자 접속
                                         </button>
                                         
+                                        {/* [요청 반영]: 교사 비밀번호 비공개(마스킹) 처리 */}
                                         <div class="mt-4 pt-3 border-t border-slate-100 text-center text-xs text-slate-400">
-                                            교사 초기 비밀번호: <strong class="text-slate-600">teacher1234</strong>
+                                            교사 인증 암호: <strong class="text-slate-600">비공개 (담당자 문의)</strong>
                                         </div>
                                     </form>
                                 )}
@@ -467,7 +466,6 @@
                                                 >
                                                     <div class="flex justify-between items-start mb-1">
                                                         <span class="font-bold text-slate-800 text-sm">{std.name} <span class="text-xs font-normal text-slate-500">({std.studentId})</span></span>
-                                                        {/* [요청 반영]: 비밀번호 비공개(마스킹) 처리 */}
                                                         <span class="text-[10px] bg-white px-2 py-0.5 rounded border text-slate-500">PW: ****</span>
                                                     </div>
                                                     <div class="flex items-center gap-2 text-[11px] text-slate-500">
@@ -634,7 +632,6 @@
                                                 <form onSubmit={handleChangeStudentPassword} class="space-y-3">
                                                     <div>
                                                         <label class="block text-xs font-medium text-slate-700 mb-1">현재 비밀번호 (보안 적용됨)</label>
-                                                        {/* [요청 반영]: 비밀번호 입력창 형태로 숨김 처리 */}
                                                         <input type="password" disabled value={selectedStdObj.password} class="w-full p-2.5 bg-slate-200 border border-slate-300 rounded-xl text-xs font-mono" />
                                                     </div>
                                                     <div>
