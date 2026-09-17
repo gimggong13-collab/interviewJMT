@@ -12,6 +12,8 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Google Fonts Inter & Noto Sans KR -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -26,6 +28,13 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        // 1. Supabase 연동 설정 (Step 1에서 복사한 주소와 API 키를 큰따옴표 안에 넣으세요)
+        const SUPABASE_URL = "https://ztdbslhlikeuflqctqkl.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_7oZJeYvPZG2O7DQMdKVU1g_ZktkZRyo";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Initial Default Mock Data based on the provided PDF materials
+        const DEFAULT_STUDENTS = [ ... ];
         // Initial Default Mock Data based on the provided PDF materials
         const DEFAULT_STUDENTS = [
             {
