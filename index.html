@@ -16,19 +16,88 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Google Fonts Inter & Noto Sans KR -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* 인쇄 전용 스타일 (Print Styles) */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 5mm; /* 쪽 여백 최소화 */
+            }
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-size: 11px !important;
+                line-height: 1.3 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-container {
+                width: 100% !important;
+                max-width: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .print-card {
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important;
+                padding: 8px 10px !important;
+                margin-bottom: 6px !important;
+                page-break-inside: avoid; /* 질문 단위로 페이지 분할 방지 */
+                background-color: #ffffff !important;
+                border-radius: 6px !important;
+            }
+            .print-header {
+                padding: 10px !important;
+                margin-bottom: 8px !important;
+                border-radius: 6px !important;
+                background-color: #f1f5f9 !important;
+                color: #0f172a !important;
+                border: 1px solid #94a3b8 !important;
+            }
+            .print-header h2 {
+                color: #0f172a !important;
+                font-size: 14px !important;
+            }
+            .print-header p {
+                display: none !important; /* 설명 문구 숨겨 공간 절약 */
+            }
+            textarea, input[type="text"] {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                resize: none !important;
+                box-shadow: none !important;
+                width: 100% !important;
+                font-size: 11px !important;
+                color: #0f172a !important;
+            }
+            .bg-amber-50\/50, .bg-amber-50 {
+                background-color: #fffbebf5 !important;
+                border-color: #fde68a !important;
+            }
+            .bg-slate-50 {
+                background-color: #f8fafc !important;
+            }
+            .bg-emerald-50 {
+                background-color: #ecfdf5 !important;
+            }
+        }
     </style>
 </head>
 <body class="text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
     <div id="root"></div>
 
     <script type="text/babel">
-        // 1. Supabase 연동 설정 (올바른 URL 형식 적용)
         const NEXT_PUBLIC_SUPABASE_URL = "https://wrravgqujpdkecjabmdd.supabase.co";
         const NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycmF2Z3F1anBka2VjamFibWRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MTIyNjQsImV4cCI6MjEwNTE4ODI2NH0.w5JAOlHqA2ONV2UmXA_xwcxYktRESBcoKfSowil9JQs";
         const supabaseClient = supabase.createClient(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
@@ -130,7 +199,6 @@
                 if (error) {
                     console.error("DB 데이터 로드 오류:", error.message);
                 } else if (data) {
-                    // DB 구조 정리 및 state 반영
                     const formattedStudents = data.map(std => ({
                         id: std.id,
                         studentId: std.student_id || std.studentId,
@@ -157,10 +225,8 @@
 
             // Supabase에 변경사항 저장하는 공통 함수
             const updateStudentData = async (updatedStudent) => {
-                // local state 업데이트
                 setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
 
-                // Supabase DB 저장
                 const { error } = await supabaseClient
                     .from('students')
                     .upsert({
@@ -184,7 +250,6 @@
                 
                 const found = students.find(s => String(s.studentId) === String(inputStdId.trim()));
                 
-                // 만약 DB에 존재하지 않는 학생일 경우 자동 신규 등록 후 로그인
                 if (!found) {
                     const newStd = {
                         id: `std_${Date.now()}`,
@@ -230,7 +295,11 @@
                 setLoginError('');
             };
 
-            // Helpers for current student data
+            // 브라우저 인쇄 실행 함수
+            const handlePrint = () => {
+                window.print();
+            };
+
             const currentStudent = students.find(s => String(s.studentId) === String(currentAuth?.studentId)) || students[0] || { universities: [], answers: [] };
 
             if (loading) {
@@ -246,7 +315,6 @@
                 return (
                     <div class="min-h-screen bg-slate-900 flex items-center justify-center p-4">
                         <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
-                            {/* Header Banner */}
                             <div class="bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white text-center relative">
                                 <div class="inline-block p-3 bg-white/10 rounded-full mb-3 backdrop-blur-sm">
                                     <i class="fa-solid fa-graduation-cap text-3xl"></i>
@@ -255,7 +323,6 @@
                                 <p class="text-indigo-100 text-xs mt-1">대입 합격을 위한 1:1 학생-교사 면접 피드백 시스템</p>
                             </div>
 
-                            {/* Mode Selection Tabs */}
                             <div class="flex border-b border-slate-200 bg-slate-50">
                                 <button 
                                     onClick={() => { setLoginRole('student'); setLoginError(''); }}
@@ -271,7 +338,6 @@
                                 </button>
                             </div>
 
-                            {/* Login Form Body */}
                             <div class="p-6">
                                 {loginError && (
                                     <div class="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
@@ -413,8 +479,7 @@
 
                 return (
                     <div class="min-h-screen flex flex-col bg-slate-100">
-                        {/* Teacher Header Navigation */}
-                        <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30">
+                        <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30 no-print">
                             <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                                 <div class="flex items-center gap-3">
                                     <div class="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg border border-emerald-500/30">
@@ -439,10 +504,8 @@
                             </div>
                         </header>
 
-                        {/* Main Teacher Workspace */}
                         <div class="max-w-7xl mx-auto w-full p-4 md:p-6 flex-1 flex flex-col md:flex-row gap-6">
-                            {/* Left Sidebar: Student Selection */}
-                            <div class="w-full md:w-80 shrink-0 space-y-4">
+                            <div class="w-full md:w-80 shrink-0 space-y-4 no-print">
                                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                                     <div class="flex items-center justify-between mb-3">
                                         <h2 class="font-bold text-slate-800 text-sm flex items-center gap-2">
@@ -482,18 +545,16 @@
                                 </div>
                             </div>
 
-                            {/* Right Content Area: Student Details & Coaching */}
                             <div class="flex-1 flex flex-col space-y-4">
                                 {feedbackNotice && (
-                                    <div class="p-3 bg-emerald-500 text-white text-xs rounded-xl shadow-md flex items-center justify-between transition-all">
+                                    <div class="p-3 bg-emerald-500 text-white text-xs rounded-xl shadow-md flex items-center justify-between transition-all no-print">
                                         <span><i class="fa-solid fa-circle-check mr-2"></i> {feedbackNotice}</span>
                                     </div>
                                 )}
 
                                 {selectedStdObj ? (
                                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-5">
-                                        {/* Student Header Summary */}
-                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-3">
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-3 no-print">
                                             <div>
                                                 <div class="flex items-center gap-2">
                                                     <h2 class="text-xl font-bold text-slate-800">{selectedStdObj.name} 학생</h2>
@@ -502,7 +563,6 @@
                                                 <p class="text-xs text-slate-500 mt-1">학생이 제출한 대학교 모집요강 정보 및 예상 질문 피드백을 진행합니다.</p>
                                             </div>
 
-                                            {/* Teacher Tabs */}
                                             <div class="flex bg-slate-100 p-1 rounded-xl">
                                                 <button 
                                                     onClick={() => setTeacherTab('answers')}
@@ -550,10 +610,8 @@
                                                                     <span class="text-[10px] text-slate-400">최종수정: {ans.updatedAt}</span>
                                                                 </div>
 
-                                                                {/* Question */}
                                                                 <h3 class="font-bold text-slate-800 text-sm">{ans.question}</h3>
 
-                                                                {/* Keywords */}
                                                                 {ans.keywords && (
                                                                     <div class="p-2.5 bg-amber-50/60 border border-amber-200/80 rounded-xl text-xs text-amber-900">
                                                                         <span class="font-semibold text-amber-800 mr-1"><i class="fa-solid fa-key text-amber-500"></i> 학생 답변 키워드:</span>
@@ -561,12 +619,10 @@
                                                                     </div>
                                                                 )}
 
-                                                                {/* Student Answer */}
                                                                 <div class="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
                                                                     {ans.answer || <span class="text-slate-400 italic">답변 미작성</span>}
                                                                 </div>
 
-                                                                {/* Teacher Feedback Box */}
                                                                 <div class="pt-2">
                                                                     <label class="block text-xs font-bold text-emerald-800 mb-1 flex items-center gap-1">
                                                                         <i class="fa-solid fa-comment-medical text-emerald-600"></i> 교사 첨삭 피드백 전달
@@ -738,9 +794,9 @@
             };
 
             return (
-                <div class="min-h-screen flex flex-col bg-slate-50">
-                    {/* Student Top Header */}
-                    <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-slate-900 text-white shadow-lg sticky top-0 z-30">
+                <div class="min-h-screen flex flex-col bg-slate-50 print-container">
+                    {/* Student Top Header (Hidden in Print) */}
+                    <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-slate-900 text-white shadow-lg sticky top-0 z-30 no-print">
                         <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-xl backdrop-blur-md border border-white/20">
@@ -774,8 +830,8 @@
                             </div>
                         </div>
 
-                        {/* Navigation Tabs Bar */}
-                        <div class="max-w-7xl mx-auto px-4 flex overflow-x-auto custom-scrollbar border-t border-white/10 text-xs font-semibold">
+                        {/* Navigation Tabs Bar (Hidden in Print) */}
+                        <div class="max-w-7xl mx-auto px-4 flex overflow-x-auto custom-scrollbar border-t border-white/10 text-xs font-semibold no-print">
                             <button 
                                 onClick={() => setActiveTab('univs')}
                                 class={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'univs' ? 'border-amber-400 text-amber-300 bg-white/5' : 'border-transparent text-indigo-200 hover:text-white'}`}
@@ -813,7 +869,7 @@
                     </header>
 
                     {/* Student Main Body View */}
-                    <main class="max-w-7xl mx-auto w-full p-4 md:p-6 flex-1">
+                    <main class="max-w-7xl mx-auto w-full p-4 md:p-6 flex-1 print-container">
                         {activeTab === 'univs' && (
                             <div class="space-y-6">
                                 <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-2xl border border-indigo-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -912,36 +968,45 @@
                             </div>
                         )}
 
-                        {/* 2. Common Questions Tab */}
+                        {}
                         {activeTab === 'common_ans' && (
-                            <div class="space-y-6">
-                                <div class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md space-y-2">
-                                    <h2 class="font-bold text-base flex items-center gap-2">
-                                        <i class="fa-solid fa-list-check text-amber-400"></i> 대입 면접 공통 빈출 질문 {COMMON_QUESTIONS.length}선 키워드 노트
-                                    </h2>
-                                    <p class="text-xs text-indigo-200 leading-relaxed">
-                                        활동지에 수록된 자주 나오는 핵심 질문들입니다. 답변을 달달 암기하기보다 **주요 키워드** 중심으로 정리하고 두괄식으로 말하는 연습을 하세요.
-                                    </p>
+                            <div class="space-y-4 print-container">
+                                {/* Header banner with print button */}
+                                <div class="bg-indigo-900 text-white p-4 rounded-2xl shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 print-header">
+                                    <div class="space-y-1">
+                                        <h2 class="font-bold text-base flex items-center gap-2">
+                                            <i class="fa-solid fa-list-check text-amber-400 no-print"></i> [{currentStudent.name} ({currentStudent.studentId})] 대입 면접 공통 빈출 질문 {COMMON_QUESTIONS.length}선 답변 노트
+                                        </h2>
+                                        <p class="text-xs text-indigo-200 leading-relaxed">
+                                            활동지에 수록된 자주 나오는 핵심 질문들입니다. 답변을 달달 암기하기보다 **주요 키워드** 중심으로 정리하고 두괄식으로 말하는 연습을 하세요.
+                                        </p>
+                                    </div>
+                                    <button 
+                                        onClick={handlePrint}
+                                        class="no-print px-4 py-2 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-xs rounded-xl shadow transition-all flex items-center gap-1.5 shrink-0 active:scale-95"
+                                    >
+                                        <i class="fa-solid fa-print"></i> 인쇄하기
+                                    </button>
                                 </div>
 
-                                <div class="space-y-4">
+                                <div class="space-y-3">
                                     {COMMON_QUESTIONS.map((qText, index) => {
                                         const existingAns = currentStudent.answers.find(a => a.question === qText);
 
                                         return (
-                                            <div key={index} class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                                            <div key={index} class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2 print-card">
                                                 <div class="flex items-center justify-between">
                                                     <h3 class="font-bold text-slate-800 text-sm">{qText}</h3>
                                                     {existingAns?.feedback && (
-                                                        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-lg border border-emerald-200 flex items-center gap-1">
-                                                            <i class="fa-solid fa-comment-dots"></i> 선생님 피드백 완료
+                                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-lg border border-emerald-200 flex items-center gap-1">
+                                                            <i class="fa-solid fa-comment-dots no-print"></i> 피드백 완료
                                                         </span>
                                                     )}
                                                 </div>
 
                                                 <div>
-                                                    <label class="block text-[11px] font-bold text-amber-800 mb-1">
-                                                        <i class="fa-solid fa-key text-amber-500"></i> 핵심 답변 키워드 (달달 암기 지양!)
+                                                    <label class="block text-[11px] font-bold text-amber-800 mb-0.5">
+                                                        <i class="fa-solid fa-key text-amber-500 mr-1 no-print"></i>핵심 답변 키워드:
                                                     </label>
                                                     <input 
                                                         type="text"
@@ -969,9 +1034,9 @@
                                                 </div>
 
                                                 <div>
-                                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">구체적 답변 내용 (두괄식: 결론 - 과거 - 현재 - 미래)</label>
+                                                    <label class="block text-[11px] font-bold text-slate-600 mb-0.5">구체적 답변 내용 (두괄식)</label>
                                                     <textarea 
-                                                        rows="3"
+                                                        rows="2"
                                                         value={existingAns?.answer || ''}
                                                         onChange={(e) => {
                                                             if (existingAns) {
@@ -991,14 +1056,14 @@
                                                             }
                                                         }}
                                                         placeholder="답변 내용을 정리하여 작성하세요..."
-                                                        class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 leading-relaxed focus:bg-white focus:ring-2 focus:ring-indigo-500"
+                                                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 leading-relaxed focus:bg-white focus:ring-2 focus:ring-indigo-500"
                                                     ></textarea>
                                                 </div>
 
                                                 {existingAns?.feedback && (
-                                                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
-                                                        <span class="text-xs font-bold text-emerald-800 flex items-center gap-1">
-                                                            <i class="fa-solid fa-graduation-cap"></i> 담당 선생님 피드백:
+                                                    <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl space-y-0.5">
+                                                        <span class="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
+                                                            <i class="fa-solid fa-graduation-cap no-print"></i> 담당 선생님 피드백:
                                                         </span>
                                                         <p class="text-xs text-emerald-900 leading-relaxed font-medium">{existingAns.feedback}</p>
                                                     </div>
@@ -1010,88 +1075,97 @@
                             </div>
                         )}
 
+                        {}
                         {activeTab === 'record_ans' && (
-                            <div class="space-y-6">
-                                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div class="space-y-4 print-container">
+                                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 print-header">
                                     <div>
                                         <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                                            <i class="fa-solid fa-file-lines text-indigo-600"></i> 생기부 기반 & 제시문/시사 예상 질문 추가
+                                            <i class="fa-solid fa-file-lines text-indigo-600 no-print"></i> [{currentStudent.name} ({currentStudent.studentId})] 생기부 기반 & 제시문/시사 예상 질문 노트
                                         </h2>
                                         <p class="text-xs text-slate-500 mt-0.5">자율활동, 동아리, 진로, 과세특, 전공 시사이슈 등 생기부에서 질문을 직접 뽑고 정리하세요.</p>
                                     </div>
 
-                                    <div class="flex flex-wrap gap-2">
-                                        {['생기부-자율', '생기부-동아리', '생기부-진로', '생기부-과세특', '제시문/시사'].map(cat => (
-                                            <button 
-                                                key={cat}
-                                                onClick={() => handleAddAnswerItem(cat)}
-                                                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-xl border border-indigo-200 transition-colors"
-                                            >
-                                                + {cat}
-                                            </button>
-                                        ))}
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <div class="flex flex-wrap gap-1.5 no-print">
+                                            {['생기부-자율', '생기부-동아리', '생기부-진로', '생기부-과세특', '제시문/시사'].map(cat => (
+                                                <button 
+                                                    key={cat}
+                                                    onClick={() => handleAddAnswerItem(cat)}
+                                                    class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-xl border border-indigo-200 transition-colors"
+                                                >
+                                                    + {cat}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <button 
+                                            onClick={handlePrint}
+                                            class="no-print px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center gap-1.5 shrink-0 active:scale-95"
+                                        >
+                                            <i class="fa-solid fa-print"></i> 인쇄하기
+                                        </button>
                                     </div>
                                 </div>
 
-                                <div class="space-y-4">
+                                <div class="space-y-3">
                                     {currentStudent.answers.filter(a => a.category !== '공통').length === 0 ? (
                                         <div class="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
                                             <p class="text-xs text-slate-400">위 버튼을 클릭하여 생기부 항목별 예상 질문을 추가해보세요.</p>
                                         </div>
                                     ) : (
                                         currentStudent.answers.filter(a => a.category !== '공통').map(ans => (
-                                            <div key={ans.id} class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 relative">
+                                            <div key={ans.id} class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2 relative print-card">
                                                 <button 
                                                     onClick={() => handleDeleteAnswer(ans.id)}
-                                                    class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 text-xs"
+                                                    class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 text-xs no-print"
                                                 >
                                                     <i class="fa-solid fa-trash-can"></i>
                                                 </button>
 
                                                 <div class="flex items-center gap-2">
-                                                    <span class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-md">{ans.category}</span>
-                                                    <span class="text-[11px] text-slate-400">최종수정: {ans.updatedAt}</span>
+                                                    <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[11px] font-bold rounded-md">{ans.category}</span>
+                                                    <span class="text-[10px] text-slate-400">최종수정: {ans.updatedAt}</span>
                                                 </div>
 
                                                 <div>
-                                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">예상 질문 내용</label>
+                                                    <label class="block text-[11px] font-bold text-slate-600 mb-0.5">예상 질문 내용</label>
                                                     <input 
                                                         type="text"
                                                         value={ans.question}
                                                         onChange={(e) => handleUpdateAnswerField(ans.id, 'question', e.target.value)}
                                                         placeholder="질문 제목 입력"
-                                                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
+                                                        class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
                                                     />
                                                 </div>
 
                                                 <div>
-                                                    <label class="block text-[11px] font-bold text-amber-800 mb-1">답변 핵심 키워드</label>
+                                                    <label class="block text-[11px] font-bold text-amber-800 mb-0.5">답변 핵심 키워드</label>
                                                     <input 
                                                         type="text"
                                                         value={ans.keywords}
                                                         onChange={(e) => handleUpdateAnswerField(ans.id, 'keywords', e.target.value)}
                                                         placeholder="답변 핵심 단어"
-                                                        class="w-full p-2 bg-amber-50/50 border border-amber-200 rounded-xl text-xs"
+                                                        class="w-full p-2 bg-amber-50/50 border border-amber-200 rounded-xl text-xs text-amber-950"
                                                     />
                                                 </div>
 
                                                 <div>
-                                                    <label class="block text-[11px] font-bold text-slate-600 mb-1">상세 답변 (동기 - 원인/과정 - 결과 - 성찰 및 배운점)</label>
+                                                    <label class="block text-[11px] font-bold text-slate-600 mb-0.5">상세 답변 (동기 - 원인/과정 - 결과 - 성찰 및 배운점)</label>
                                                     <textarea 
                                                         rows="3"
                                                         value={ans.answer}
                                                         onChange={(e) => handleUpdateAnswerField(ans.id, 'answer', e.target.value)}
                                                         placeholder="나만의 구체적 생기부 기반 답변 작성..."
-                                                        class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs leading-relaxed"
+                                                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs leading-relaxed"
                                                     ></textarea>
                                                 </div>
 
                                                 {ans.feedback && (
-                                                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                                                        <span class="text-xs font-bold text-emerald-800 flex items-center gap-1 mb-1">
-                                                            <i class="fa-solid fa-graduation-cap"></i> 선생님 피드백:
+                                                    <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl space-y-0.5">
+                                                        <span class="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
+                                                            <i class="fa-solid fa-graduation-cap no-print"></i> 선생님 피드백:
                                                         </span>
-                                                        <p class="text-xs text-emerald-900 leading-relaxed">{ans.feedback}</p>
+                                                        <p class="text-xs text-emerald-900 leading-relaxed font-medium">{ans.feedback}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -1229,8 +1303,8 @@
                         )}
                     </main>
 
-                    {/* Footer */}
-                    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+                    {/* Footer (Hidden in Print) */}
+                    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400 no-print">
                         면접으로 대학가자! 지민샘이 여러분들의 최종합격을 응원합니다!
                     </footer>
                 </div>
